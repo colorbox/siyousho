@@ -2,72 +2,95 @@
 
 require_relative 'siyousho/version'
 
+require 'unparser'
+require 'parser/current'
+require 'method_source'
+
 module Siyousho
-  def self.save_path
-    Rails.root.join('tmp', '仕様書')
-  end
-end
+  class << self
+    attr_accessor :current_test, :screenshots
 
-class RSpec::Core::Example
-  def screenshots
-    @screenshots ||= []
-  end
-end
+    def dir_path
+      Rails.root.join('tmp', '仕様書')
+    end
 
-module Turnip
-  module Execute
-    alias_method :original_step, :step
+    def file_name
+      dir_path.join("#{current_test}.html")
+    end
 
-    def step(step_or_description, *extra_args)
-      original_step(step_or_description, *extra_args)
+    def generate_parts(test_name, step_name)
+      dir_path = Siyousho.dir_path.join(test_name)
+      FileUtils.mkdir_p(dir_path)
+      filename = "#{screenshots.size}.png"
+      file_path = dir_path.join(filename)
 
-      unless step_or_description.class == String
-        dir_path = Siyousho.save_path.join(::RSpec.current_example.file_path)
-        FileUtils.mkdir_p(dir_path)
-        filename = "#{step_or_description.raw[:id]}.png"
-        file_path = dir_path.join(filename)
+      relative_file_path = test_name + '/' + filename
 
-        relative_file_path = ::RSpec.current_example.file_path + '/' + filename
+      Capybara.current_session.save_screenshot(file_path)
+      screenshots << {image_path: relative_file_path, step: step_name}
+    end
 
-        # ステップ実行後のスクリーンショット
-        save_screenshot(file_path)
-        screenshots << {image_path: relative_file_path, step: step_or_description.raw[:text]}
-      else
-        screenshots << {step: step_or_description}
+    def create_html
+      return if screenshots.empty?
+      html = "<html><head><title>#{current_test}</title></head><body>"
+
+      screenshots.each do |screenshot|
+        html += "<h1>#{screenshot[:step]}</h1>"
+        html += "<img src='#{screenshot[:image_path]}' style='max-width: 1000px; width: auto; height: auto;'><br>" if screenshot[:image_path]
       end
-    end
+      html += "</body></html>"
 
-    def screenshots
-      ::RSpec.current_example.screenshots
+      File.write(file_name, html)
     end
-
-    def save_screenshot(filename)
-      path = File.join(Siyousho.save_path, filename)
-      Capybara.current_session.save_screenshot(path)
-    end
-
   end
 end
 
-RSpec.configure do |config|
-  config.after(:each) do |example|
-    TurnipReport.generate_html
+def modify_proc(proc)
+  buffer = Parser::Source::Buffer.new('(string)')
+  buffer.source = proc.source
+  parser = Parser::CurrentRuby.new
+  ast = parser.parse(buffer)
+
+  rewriter = Parser::Source::TreeRewriter.new(buffer)
+  ast.children.last.children.each do |child|
+    rewriter.insert_before(child.location.expression, "Siyousho.generate_parts(Siyousho.current_test,'#{Unparser.unparse(child)}')\n")
   end
+  modified_code = rewriter.process
+
+  modified_modified_code = modified_code.split("\n")[1..-2].join("\n")
+
+  Proc.new { eval(modified_modified_code) }
 end
 
-module TurnipReport
-  def self.generate_html
-    html = "<html><head><title>#{::RSpec.current_example.metadata[:example_group][:full_description]}</title></head><body>"
-    RSpec.current_example.screenshots.each do |screenshot|
-      html += "<h1>#{screenshot[:step]}</h1>"
-      html += "<img src='#{screenshot[:image_path]}' style='max-width: 1000px; width: auto; height: auto;'><br>" if screenshot[:image_path]
+module Minitest
+  class Test < Runnable
+    def run
+      with_info_handler do
+        time_it do
+          capture_exceptions do
+            Siyousho.current_test = self.name
+            Siyousho.screenshots = []
+
+            SETUP_METHODS.each do |hook|
+              self.send hook
+            end
+
+            proc = self.method(self.name).to_proc
+            hello_block = modify_proc(proc)
+            hello_block.call
+          end
+
+          TEARDOWN_METHODS.each do |hook|
+            capture_exceptions do
+              self.send hook
+            end
+            Siyousho.create_html
+            Siyousho.screenshots.clear
+          end
+        end
+      end
+
+      Result.from self # per contract
     end
-    html += "</body></html>"
-
-    dir_path = Siyousho.save_path
-    file_name = "#{::RSpec.current_example.metadata[:example_group][:full_description]}.html"
-    file_path = dir_path.join(file_name)
-
-    File.write(file_path, html)
   end
 end
