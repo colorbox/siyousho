@@ -1,0 +1,11 @@
+source "https://rubygems.org"
+
+# No version pins and no committed Gemfile.lock on purpose: this app exists only
+# to verify siyousho against the latest released Rails, so every `bundle install`
+# resolves the newest versions.
+gem "rails"
+gem "puma"
+gem "capybara"
+gem "selenium-webdriver"
+
+gem "siyousho", path: "../..", require: false

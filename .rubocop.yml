@@ -1,5 +1,12 @@
+inherit_mode:
+  merge:
+    - Exclude
+
 AllCops:
   TargetRubyVersion: 3.3
+  Exclude:
+    # Fixture Rails app used by the integration test; not linted as gem code.
+    - 'test/dummy_rails_app/**/*'
 
 Style/StringLiterals:
   Enabled: true
