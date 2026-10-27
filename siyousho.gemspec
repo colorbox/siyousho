@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = 'The Siyousho gem is designed to facilitate End-to-End (E2E) testing by automatically generating detailed specification documents. These documents are enriched with screenshots, providing a visual context for each testing step. Ideal for developers and QA teams who require comprehensive test reports, this gem helps in capturing the state of the application at various stages of the testing cycle.'
   spec.homepage = 'https://github.com/colorbox/siyousho'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.0.0'
+  spec.required_ruby_version = '>= 3.3.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = 'https://github.com/colorbox/siyousho'
