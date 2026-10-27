@@ -7,3 +7,5 @@
 /spec/reports/
 /tmp/
 /siyousho*.gem
+.DS_Store
+.claude/settings.local.json
