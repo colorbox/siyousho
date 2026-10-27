@@ -65,28 +65,26 @@ end
 module Minitest
   class Test < Runnable
     def run
-      with_info_handler do
-        time_it do
+      time_it do
+        capture_exceptions do
+          Siyousho.current_test = self.name
+          Siyousho.screenshots = []
+
+          SETUP_METHODS.each do |hook|
+            self.send hook
+          end
+
+          proc = self.method(self.name).to_proc
+          hello_block = modify_proc(proc)
+          hello_block.call
+        end
+
+        TEARDOWN_METHODS.each do |hook|
           capture_exceptions do
-            Siyousho.current_test = self.name
-            Siyousho.screenshots = []
-
-            SETUP_METHODS.each do |hook|
-              self.send hook
-            end
-
-            proc = self.method(self.name).to_proc
-            hello_block = modify_proc(proc)
-            hello_block.call
+            self.send hook
           end
-
-          TEARDOWN_METHODS.each do |hook|
-            capture_exceptions do
-              self.send hook
-            end
-            Siyousho.create_html
-            Siyousho.screenshots.clear
-          end
+          Siyousho.create_html
+          Siyousho.screenshots.clear
         end
       end
 
