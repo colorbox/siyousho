@@ -13,11 +13,14 @@ Siyousho (仕様書) is a Ruby gem that automatically generates specification do
 # Run the gem's unit tests
 rake test
 
-# Run a specific test file
-ruby -Ilib:test test/test_siyousho.rb
+# Run a specific test file / method
+bundle exec ruby -Ilib:test test/test_siyousho.rb
+bundle exec ruby -Ilib:test test/test_siyousho.rb -n test_that_it_has_a_version_number
 
-# Run a specific test method
-ruby -Ilib:test test/test_siyousho.rb -n test_that_it_has_a_version_number
+# Run the unit tests against a specific Minitest release. CI does this for the
+# three latest Minitest minor releases (see gemfiles/ and the build matrix).
+BUNDLE_GEMFILE=gemfiles/minitest_5.26.gemfile bundle install
+BUNDLE_GEMFILE=gemfiles/minitest_5.26.gemfile bundle exec rake test
 
 # Run the dummy Rails app's system tests against this checkout (needs Chrome).
 # This installs the latest Rails and verifies that siyousho produced a document
@@ -76,6 +79,8 @@ Screenshots and HTML are saved to:
 
 ### Integration Points
 The gem hooks into Minitest's test execution flow by overriding the `run` method in `Minitest::Test`. It captures screenshots before each statement in the test method and generates an HTML report after teardown.
+
+Because of that patch, `test/test_helper.rb` must not load the gem. `test/test_siyousho.rb` instead runs `test/fixtures/instrumented_run.rb` (stubbed `Rails.root` and Capybara session) in a child process and inspects the generated document. The `run` override mirrors the body of `Minitest::Test#run` in Minitest 5.25 through 6.0; re-check it when a new Minitest minor release appears and add that release to `gemfiles/`.
 
 ### Dummy Rails App (test/dummy_rails_app)
 A deliberately minimal Rails app (no database, two controllers, one system test file) used only to verify the gem end to end.

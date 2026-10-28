@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+# Runs the gem's tests against a specific Minitest release (used by CI):
+#   BUNDLE_GEMFILE=gemfiles/minitest_5.27.gemfile bundle install
+#   BUNDLE_GEMFILE=gemfiles/minitest_5.27.gemfile bundle exec rake test
+source 'https://rubygems.org'
+
+gemspec path: '..'
+
+gem 'minitest', '~> 5.27.0'
+gem 'rake', '~> 13.0'
+gem 'rubocop', '~> 1.21'

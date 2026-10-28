@@ -9,3 +9,4 @@
 /siyousho*.gem
 .DS_Store
 .claude/settings.local.json
+/gemfiles/*.lock
