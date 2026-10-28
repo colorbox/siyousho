@@ -4,17 +4,31 @@ inherit_mode:
 
 AllCops:
   TargetRubyVersion: 3.3
+  NewCops: enable
+  SuggestExtensions: false
   Exclude:
     # Fixture Rails app used by the integration test; not linted as gem code.
     - 'test/dummy_rails_app/**/*'
+    # Test inputs for the instrumenter, deliberately unusual code.
+    - 'test/fixtures/**/*'
 
 Style/StringLiterals:
-  Enabled: true
-  EnforcedStyle: double_quotes
+  EnforcedStyle: single_quotes
 
 Style/StringLiteralsInInterpolation:
-  Enabled: true
-  EnforcedStyle: double_quotes
+  EnforcedStyle: single_quotes
 
 Layout/LineLength:
   Max: 120
+
+Metrics/AbcSize:
+  Exclude:
+    - 'test/**/*'
+
+Metrics/MethodLength:
+  Exclude:
+    - 'test/**/*'
+
+Metrics/ClassLength:
+  Exclude:
+    - 'test/**/*'
