@@ -20,4 +20,13 @@ class PagesTest < ApplicationSystemTestCase
     assert_text "Welcome! You have signed up successfully."
     assert_current_path user_dashboard_path
   end
+
+  test "日本語のテスト名でも仕様書を生成する" do
+    visit root_path
+    within("h1") do
+      assert_text "Welcome"
+    end
+    click_link "About"
+    assert_text "About This Application"
+  end
 end

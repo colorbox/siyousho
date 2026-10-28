@@ -70,7 +70,7 @@ jobs:
         ruby-version: ${{ matrix.ruby }}
         working-directory: test/dummy_rails_app
     - run: bundle install
-    - run: bin/rails test:system
+    - run: bin/rails test:all
     - name: Upload generated documents
       if: always()
       uses: actions/upload-artifact@v7

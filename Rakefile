@@ -14,7 +14,7 @@ task :integration do
   Dir.chdir('test/dummy_rails_app') do
     Bundler.with_unbundled_env do
       sh 'bundle install'
-      sh 'bin/rails test:system'
+      sh 'bin/rails test:all'
     end
   end
 end
